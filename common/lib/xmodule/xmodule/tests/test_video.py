@@ -280,7 +280,8 @@ class VideoDescriptorImportTestCase(unittest.TestCase):
             'download_track': False,
             'download_video': True,
             'html5_sources': ['http://www.example.com/source.mp4'],
-            'data': ''
+            'data': '',
+            'transcripts': {},
         })
 
     def test_from_xml_missing_download_track(self):

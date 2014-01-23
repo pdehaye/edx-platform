@@ -135,7 +135,7 @@ class VideoFields(object):
         help="The name of the timed transcript track (for non-Youtube videos).",
         display_name="Transcript (primary)",
         scope=Scope.settings,
-        default=""
+        default="OEoXaMPEzfM"
     )
     show_captions = Boolean(
         help="This controls whether or not captions are shown by default.",
@@ -164,6 +164,20 @@ class VideoFields(object):
         help="Default speed in cases when speed wasn't explicitly for specific video",
         scope=Scope.preferences,
         default=1.0
+    )
+    # Data format: {de': 'german_translation', 'ua': 'ukrainian_translation'}
+    transcripts = Dict(
+        help="Additional translations for transcript",
+        display_name="Additional translations for transcript",
+        scope=Scope.settings,
+        default={}
+    )
+
+    transcript_language = String(
+        help="Preferred language for transcript",
+        display_name="Preferred language for transcript",
+        scope=Scope.preferences,
+        default="en"
     )
 
 
@@ -208,6 +222,7 @@ class VideoModule(VideoFields, XModule):
 
     def handle_ajax(self, dispatch, data):
         accepted_keys = ['speed', 'saved_video_position', 'transcript_language']
+
         if dispatch == 'save_user_state':
 
             for key in data:
@@ -506,6 +521,7 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
             else:
                 editable_fields.pop('source')
 
+        editable_fields.pop('transcripts')
         return editable_fields
 
     @classmethod

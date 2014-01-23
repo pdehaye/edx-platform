@@ -120,7 +120,6 @@
                         expect($('.langs-list')).toExist();
                         expect($('.langs-list')).toHandle('click');
 
-
                         $('.langs-list li').each(function(index) {
                             var code = $(this).data('lang-code'),
                                 link = $(this).find('a'),
