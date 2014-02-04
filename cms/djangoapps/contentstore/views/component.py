@@ -35,6 +35,7 @@ __all__ = ['OPEN_ENDED_COMPONENT_TYPES',
            'ADVANCED_COMPONENT_POLICY_KEY',
            'subsection_handler',
            'unit_handler',
+           'container_handler',
            'component_handler'
            ]
 
@@ -234,12 +235,13 @@ def unit_handler(request, tag=None, package_id=None, branch=None, version_guid=N
                 course_advanced_keys
             )
 
-        components = [
+        xblocks = item.get_children()
+        locators = [
             loc_mapper().translate_location(
                 course.location.course_id, component.location, False, True
             )
             for component
-            in item.get_children()
+            in xblocks
         ]
 
         # TODO (cpennington): If we share units between courses,
@@ -283,7 +285,8 @@ def unit_handler(request, tag=None, package_id=None, branch=None, version_guid=N
             'context_course': course,
             'unit': item,
             'unit_locator': locator,
-            'components': components,
+            'xblocks': xblocks,
+            'locators': locators,
             'component_templates': component_templates,
             'draft_preview_link': preview_lms_link,
             'published_preview_link': lms_link,
@@ -299,6 +302,44 @@ def unit_handler(request, tag=None, package_id=None, branch=None, version_guid=N
                 get_default_time_display(item.published_date)
                 if item.published_date is not None else None
             ),
+        })
+    else:
+        return HttpResponseBadRequest("Only supports html requests")
+
+
+# pylint: disable=unused-argument
+@require_http_methods(["GET"])
+@login_required
+def container_handler(request, tag=None, package_id=None, branch=None, version_guid=None, block=None):
+    """
+    The restful handler for container xblock requests.
+
+    GET
+        html: returns the HTML page for editing a container
+        json: not currently supported
+    """
+    if 'text/html' in request.META.get('HTTP_ACCEPT', 'text/html'):
+        locator = BlockUsageLocator(package_id=package_id, branch=branch, version_guid=version_guid, block_id=block)
+        try:
+            old_location, course, item, __ = _get_item_in_course(request, locator)
+        except ItemNotFoundError:
+            return HttpResponseBadRequest()
+
+        parent_xblock = None
+        parent_locators = modulestore().get_parent_locations(old_location, None)
+        if len(parent_locators) > 0:
+            parent_xblock = modulestore().get_item(parent_locators[0])
+
+        return render_to_response('container.html', {
+            'context_course': course,
+            'xblock': item,
+            'xblock_locator': locator,
+            'xblock_info': {
+                'id': str(locator),
+                'display_name': item.display_name,
+                'category': item.category
+            },
+            'parent_xblock': parent_xblock,
         })
     else:
         return HttpResponseBadRequest("Only supports html requests")

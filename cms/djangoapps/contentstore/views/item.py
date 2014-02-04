@@ -11,7 +11,7 @@ from xmodule_modifiers import wrap_xblock
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest, HttpResponse
+from django.http import HttpResponseBadRequest, HttpResponse, Http404
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods
 
@@ -163,7 +163,6 @@ def xblock_handler(request, tag=None, package_id=None, branch=None, version_guid
             content_type="text/plain"
         )
 
-
 # pylint: disable=unused-argument
 @require_http_methods(("GET"))
 @login_required
@@ -184,7 +183,7 @@ def xblock_view_handler(request, package_id, view_name, tag=None, branch=None, v
 
     accept_header = request.META.get('HTTP_ACCEPT', 'application/json')
 
-    if 'application/x-fragment+json' in accept_header:
+    if 'application/json' in accept_header:
         store = get_modulestore(old_location)
         component = store.get_item(old_location)
 
@@ -204,12 +203,25 @@ def xblock_view_handler(request, package_id, view_name, tag=None, branch=None, v
 
             store.save_xmodule(component)
 
-        elif view_name == 'student_view':
-            fragment = get_preview_fragment(request, component)
-            fragment.content = render_to_string('component.html', {
-                'preview': fragment.content,
-                'label': component.display_name or component.scope_ids.block_type,
-            })
+        elif view_name == 'student_view' or view_name == 'container_preview':
+            is_container_view = view_name == 'container_preview'
+
+            # Only show the new style HTML for the container view, i.e. for non-verticals
+            # Note: this special case logic can be removed once the unit page is replaced
+            # with the new container view.
+            is_read_only_view = is_container_view
+            context = {
+                'container_view': is_container_view,
+                'read_only': is_read_only_view,
+                'root_xblock': component
+            }
+
+            fragment = get_preview_fragment(request, component, context)
+            if not is_container_view:
+                fragment.content = render_to_string('component.html', {
+                    'preview': fragment.content,
+                    'label': component.display_name or component.scope_ids.block_type,
+                })
         else:
             raise Http404
 
