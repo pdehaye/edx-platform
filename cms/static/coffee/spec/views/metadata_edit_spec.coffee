@@ -587,7 +587,6 @@ define ["js/models/metadata", "js/collections/metadata", "js/views/metadata", "c
               }
             }
           ]
-
           _.each data, ((d, index) ->
             @dictView.setValueInEditor(d.initialValue)
             @dictView.updateModel();

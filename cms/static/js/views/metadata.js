@@ -22,6 +22,7 @@ function(BaseView, _, MetadataModel, AbstractEditor, VideoList) {
             var self = this;
             this.collection.each(
                 function (model) {
+
                     var data = {
                             el: self.$el.find('.metadata_entry')[counter++],
                             model: model
