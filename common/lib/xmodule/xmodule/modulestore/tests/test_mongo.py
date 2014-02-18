@@ -273,21 +273,21 @@ class TestMongoModuleStore(object):
             {'displayname': 'hello'}
         )
 
-    def test_get_courses_for_wiki(self):
+    def test_get_courses_for_wiki_id(self):
         """
-        Test the get_courses_for_wiki method
+        Test the get_courses_for_wiki_id method
         """
         for course_id in self.courses:
-            courses = self.store.get_courses_for_wiki(course_id)
+            courses = self.store.get_courses_for_wiki_id(course_id)
             assert_equals(len(courses), 1)
             assert_equals(Location('i4x', 'edX', course_id, 'course', '2012_Fall'), courses[0])
-        course_locs = self.store.get_courses_for_wiki('no_such_wiki')
+        course_locs = self.store.get_courses_for_wiki_id('no_such_wiki')
         assert_equals(len(course_locs), 0)
         # now set two to have same wiki
         course = self.store.get_course('edX/toy/2012_Fall')
         course.wiki_slug = 'simple'
         self.store.save_xmodule(course)
-        courses = self.store.get_courses_for_wiki('simple')
+        courses = self.store.get_courses_for_wiki_id('simple')
         assert_equals(len(courses), 2)
         for course_id in ['toy', 'simple']:
             assert_in(Location('i4x', 'edX', course_id, 'course', '2012_Fall'), courses)
