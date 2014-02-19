@@ -243,8 +243,7 @@ function (Initialize) {
                 expect(expected).toEqual(100);
             });
 
-            var msg = 'returns duration for the 1.0 speed if metadata for ' +
-                        'videoId doesn\'t exist';
+            var msg = 'returns duration for the 1.0 speed as a fallback';
             it(msg, function () {
                 var expected;
 

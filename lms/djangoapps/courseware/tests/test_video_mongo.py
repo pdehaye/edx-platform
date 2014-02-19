@@ -42,10 +42,13 @@ class TestVideoYouTube(TestVideo):
             'yt_test_timeout': 1500,
             'yt_test_url': 'https://gdata.youtube.com/feeds/api/videos/',
             'transcript_language': 'en',
-            'transcript_languages' : '{"uk": "Ukrainian", "en": "English"}',
+            'transcript_languages' : '{"en": "English", "uk": "Ukrainian"}',
             'transcript_translation_url': self.item_descriptor.xmodule_runtime.handler_url(
                 self.item_descriptor, 'transcript'
             ).rstrip('/?') + '/translation',
+            'transcript_available_translations_url': self.item_descriptor.xmodule_runtime.handler_url(
+                self.item_descriptor, 'transcript'
+            ).rstrip('/?') + '/available_translations',
         }
         self.assertEqual(
             context,
@@ -105,6 +108,9 @@ class TestVideoNonYouTube(TestVideo):
             'transcript_translation_url': self.item_descriptor.xmodule_runtime.handler_url(
                 self.item_descriptor, 'transcript'
             ).rstrip('/?') + '/translation',
+            'transcript_available_translations_url': self.item_descriptor.xmodule_runtime.handler_url(
+                self.item_descriptor, 'transcript'
+            ).rstrip('/?') + '/available_translations',
         }
 
         self.assertEqual(
@@ -207,6 +213,9 @@ class TestGetHtmlMethod(BaseTestXmodule):
                 'transcript_translation_url': self.item_descriptor.xmodule_runtime.handler_url(
                     self.item_descriptor, 'transcript'
                 ).rstrip('/?') + '/translation',
+                'transcript_available_translations_url': self.item_descriptor.xmodule_runtime.handler_url(
+                    self.item_descriptor, 'transcript'
+                ).rstrip('/?') + '/available_translations',
                 'ajax_url': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
                 'track': track_url if data['expected_track_url'] == u'a_sub_file.srt.sjson' else data['expected_track_url'],
                 'sub': data['sub'],
@@ -313,6 +322,9 @@ class TestGetHtmlMethod(BaseTestXmodule):
                 'transcript_translation_url': self.item_descriptor.xmodule_runtime.handler_url(
                     self.item_descriptor, 'transcript'
                 ).rstrip('/?') + '/translation',
+                'transcript_available_translations_url': self.item_descriptor.xmodule_runtime.handler_url(
+                    self.item_descriptor, 'transcript'
+                ).rstrip('/?') + '/available_translations',
                 'ajax_url': self.item_descriptor.xmodule_runtime.ajax_url + '/save_user_state',
                 'sources': data['result'],
                 'id': self.item_descriptor.location.html_id(),

@@ -113,11 +113,10 @@
             spy = spyOn($, 'ajax');
         }
         return spy.andCallFake(function (settings) {
-            var match, status, callCallback;
-            if (
-                match = settings.url
-                    .match(/youtube\.com\/.+\/videos\/(.+)\?v=2&alt=jsonc/)
-            ) {
+            var match = settings.url
+                    .match(/youtube\.com\/.+\/videos\/(.+)\?v=2&alt=jsonc/),
+                status, callCallback;
+            if (match) {
                 status = match[1].split('_');
                 if (status && status[0] === 'status') {
                     callCallback = function (callback) {
@@ -145,6 +144,16 @@
                 }
             } else if (settings.url == '/transcript/translation') {
                 return settings.success(jasmine.stubbedCaption);
+            } else if (settings.url == '/transcript/available_translations') {
+                callCallback = function (callback) {
+                    callback.call(window, {});
+                };
+
+                return {
+                    always: callCallback,
+                    error: callCallback,
+                    done: callCallback
+                };
             } else if (settings.url.match(/.+\/problem_get$/)) {
                 return settings.success({
                     html: readFixtures('problem_content.html')

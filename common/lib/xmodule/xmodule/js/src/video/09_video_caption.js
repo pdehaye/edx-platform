@@ -55,6 +55,7 @@ function () {
             captionMouseDown: captionMouseDown,
             captionMouseOverOut: captionMouseOverOut,
             fetchCaption: fetchCaption,
+            fetchAvailableTranslations: fetchAvailableTranslations,
             hideCaptions: hideCaptions,
             onMouseEnter: onMouseEnter,
             onMouseLeave: onMouseLeave,
@@ -114,17 +115,14 @@ function () {
         Caption.hideSubtitlesEl = this.el.find('a.hide-subtitles');
 
         if (_.keys(languages).length) {
-            if (_.keys(languages).length > 1) {
-                Caption.showLanguageMenu = true;
-                Caption.renderLanguages();
-            }
+            Caption.renderLanguages(languages);
 
             if (!Caption.fetchCaption()) {
                 Caption.hideCaptions(true);
                 Caption.hideSubtitlesEl.hide();
             }
         } else {
-            Caption.hideCaptions(true);
+            Caption.hideCaptions(true, false);
             Caption.hideSubtitlesEl.hide();
         }
     }
@@ -237,19 +235,19 @@ function () {
             return false;
         }
 
-        if (this.videoCaption.loaded) {
-            this.videoCaption.hideCaptions(false);
+        if (Caption.loaded) {
+            Caption.hideCaptions(false);
         } else {
-            this.videoCaption.hideCaptions(this.hide_captions);
+            Caption.hideCaptions(this.hide_captions, false);
         }
 
-        if (this.videoCaption.fetchXHR && this.videoCaption.fetchXHR.abort) {
-            this.videoCaption.fetchXHR.abort();
+        if (Caption.fetchXHR && Caption.fetchXHR.abort) {
+            Caption.fetchXHR.abort();
         }
 
         // Fetch the captions file. If no file was specified, or if an error
         // occurred, then we hide the captions panel, and the "CC" button
-        this.videoCaption.fetchXHR = $.ajaxWithPrefix({
+        Caption.fetchXHR = $.ajaxWithPrefix({
             url: self.config.transcriptTranslationUrl,
             notifyOnError: false,
             data: {
@@ -289,12 +287,59 @@ function () {
                     ', MESSAGE:', '' + errorThrown
                 );
 
-                Caption.hideCaptions(true, false);
-                Caption.hideSubtitlesEl.hide();
+                var languages = self.config.transcriptLanguages,
+                    hideCaptionsHelper = function () {
+                        Caption.hideCaptions(true, false);
+                        Caption.hideSubtitlesEl.hide();
+                    };
+
+                // If initial list of languages has more than 1 item, check
+                // for availability other transcripts.
+                if (_.keys(languages).length > 1) {
+                    Caption.fetchAvailableTranslations()
+                        .done(function (response) {
+                            var languages = self.config.transcriptLanguages,
+                                transcripts = _.pick(languages, response);
+
+                            // Update property with available currently translations.
+                            self.config.transcriptLanguages = transcripts;
+                            // Remove an old language menu.
+                            Caption.container.find('.langs-list').remove();
+
+                            if (_.keys(transcripts).length) {
+                                // And try again to fetch transcript.
+                                Caption.fetchCaption();
+                                Caption.renderLanguages(transcripts);
+                            }
+                        })
+                        .fail(function (jqXHR, textStatus, errorThrown) {
+                            console.log(
+                                '[Video info]: ERROR while fetching list of ' +
+                                'available translations.'
+                            );
+                            console.log(
+                                '[Video info]: STATUS:', textStatus +
+                                ', MESSAGE:', '' + errorThrown
+                            );
+
+                            hideCaptionsHelper();
+                        });
+                } else {
+                    hideCaptionsHelper();
+                }
             }
         });
 
         return true;
+    }
+
+    function fetchAvailableTranslations() {
+        var self = this;
+
+        return $.ajaxWithPrefix({
+            url: self.config.transcriptAvailableTranslationsUrl,
+            notifyOnError: false
+        });
     }
 
     function resize() {
@@ -309,13 +354,18 @@ function () {
         this.videoCaption.setSubtitlesHeight();
     }
 
-    function renderLanguages() {
+    function renderLanguages(languages) {
         var self = this,
             menu = $('<ol class="langs-list menu">'),
-            currentLang = this.getCurrentLanguage(),
-            langsList = this.config.transcriptLanguages;
+            currentLang = this.getCurrentLanguage();
 
-        $.each(langsList, function(code, label) {
+        if (_.keys(languages).length < 2) {
+            return false;
+        }
+
+        this.videoCaption.showLanguageMenu = true;
+
+        $.each(languages, function(code, label) {
             var li = $('<li data-lang-code="' + code + '" />'),
                 link = $('<a href="javascript:void(0);">' + label + '</a>');
 
@@ -329,7 +379,7 @@ function () {
 
         this.videoCaption.container.append(menu);
 
-        menu.find('a').on('click', function (e) {
+        menu.on('click', 'a', function (e) {
             var el = $(e.currentTarget).parent(),
                 Caption = self.videoCaption,
                 langCode = el.data('lang-code');

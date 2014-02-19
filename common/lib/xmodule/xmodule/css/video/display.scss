@@ -364,8 +364,10 @@ div.video {
                 }
               }
 
-              &.active {
-                font-weight: bold;
+              &.active{
+                a {
+                  font-weight: bold;
+                }
               }
 
               &:last-child {

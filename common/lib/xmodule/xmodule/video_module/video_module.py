@@ -10,6 +10,7 @@ in-browser HTML5 video method (when in HTML5 mode).
 in XML.
 """
 
+import os
 import json
 import logging
 
@@ -254,11 +255,13 @@ class VideoModule(VideoFields, XModule):
             # there are no translations and English subtitles are not set by instructor.
             transcript_language = 'null'
 
-        languages = {i[0]: i[1] for i in settings.ALL_LANGUAGES}
-        # OrderedDict for easy testing of rendered context in tests
-        transcript_languages = OrderedDict((k, languages[k]) for k in self.transcripts)
+        ALL_LANGUAGES = {i[0]: i[1] for i in settings.ALL_LANGUAGES}
+        languages = {l: ALL_LANGUAGES[l] for l in self.transcripts};
         if self.sub:
-            transcript_languages.update({'en': 'English'})
+            languages.update({'en': 'English'})
+
+        # OrderedDict for easy testing of rendered context in tests
+        transcript_languages = OrderedDict(sorted(languages.items(), key=lambda k: k[1]))
 
         return self.system.render_template('video.html', {
             'ajax_url': self.system.ajax_url + '/save_user_state',
@@ -284,7 +287,8 @@ class VideoModule(VideoFields, XModule):
             'yt_test_url': settings.YOUTUBE_TEST_URL,
             'transcript_language': transcript_language,
             'transcript_languages': json.dumps(transcript_languages),
-            'transcript_translation_url': self.runtime.handler_url(self, 'transcript').rstrip('/?') + '/translation'
+            'transcript_translation_url': self.runtime.handler_url(self, 'transcript').rstrip('/?') + '/translation',
+            'transcript_available_translations_url': self.runtime.handler_url(self, 'transcript').rstrip('/?') + '/available_translations',
         })
 
     def get_transcript(self):
@@ -317,21 +321,30 @@ class VideoModule(VideoFields, XModule):
         Dispatches:
         `download`: returns SRT file.
         `translation`: returns jsoned translation text.
-        `available_translation`: returns list of languages, for which SRT files exist. For 'en' check if SJSON exists.
+        `available_translations`: returns list of languages, for which SRT files exist. For 'en' check if SJSON exists.
         """
-        if ('language' not in request.GET or
-            'videoId' not in request.GET and dispatch == 'translation'):
-            log.info("Invalid /transcript GET parameters.")
-            return Response(status=400)
+        if dispatch == 'translation':
+            if 'language' not in request.GET or 'videoId' not in request.GET:
+                log.info("Invalid /transcript GET parameters.")
+                return Response(status=400)
 
-        lang = request.GET.get('language')
-        if lang not in ['en'] + self.transcripts.keys():
-            log.info("Video: transcript facilities are not available for given language.")
-            return Response(status=404)
-        if lang != self.transcript_language:
-            self.transcript_language = lang
+            lang = request.GET.get('language')
+            if lang not in ['en'] + self.transcripts.keys():
+                log.info("Video: transcript facilities are not available for given language.")
+                return Response(status=404)
+            if lang != self.transcript_language:
+                self.transcript_language = lang
 
-        if dispatch == 'download':
+            try:
+                transcript =  self.translation(request.GET.get('videoId'))
+            except TranscriptException as e:
+                log.info(e.message)
+                response = Response(status=404)
+            else:
+                response = Response(transcript)
+                response.content_type = 'application/json'
+
+        elif dispatch == 'download':
             try:
                 subs = self.get_transcript()
             except (NotFoundError, ValueError, KeyError):
@@ -345,20 +358,12 @@ class VideoModule(VideoFields, XModule):
                     ]
                 )
                 response.content_type = "application/x-subrip"
-        elif dispatch == 'translation':
-            try:
-                transcript =  self.translation(request.GET.get('videoId'))
-            except TranscriptException as e:
-                log.info(e.message)
-                response = Response(status=404)
-            else:
-                response = Response(transcript)
-                response.content_type = 'application/json'
+
         elif dispatch == 'available_translations':
             available_translations, langs= [], {}
             if self.sub:
                 langs['en'] = self.sub
-            for lang,  SRT_filename in self.transcripts.items():
+            for lang, SRT_filename in self.transcripts.items():
                  langs[lang] = os.path.splitext(SRT_filename)[0]
             for lang, subs_id in langs.items():
                 try:

@@ -118,6 +118,8 @@
                             langLabels = _.values(transcripts);
 
                         expect($('.langs-list')).toExist();
+                        expect($('.langs-list')).toHandle('click');
+
 
                         $('.langs-list li').each(function(index) {
                             var code = $(this).data('lang-code'),
@@ -126,7 +128,6 @@
 
                             expect(code).toBeInArray(langCodes);
                             expect(label).toBeInArray(langLabels);
-                            expect(link).toHandle('click');
                         });
                     });
 
@@ -394,8 +395,6 @@
         });
 
         it('reRenderCaption', function () {
-            state = jasmine.initializePlayer();
-
             var Caption = state.videoCaption,
                 li;
 
@@ -451,7 +450,7 @@
                 Caption.fetchCaption();
 
                 expect($.ajaxWithPrefix).toHaveBeenCalled();
-                expect(Caption.hideCaptions).toHaveBeenCalledWith(false);
+                expect(Caption.hideCaptions).toHaveBeenCalledWith(false, false);
 
                 Caption.loaded = false;
                 Caption.hideCaptions.reset();
@@ -459,7 +458,7 @@
                 Caption.fetchCaption();
 
                 expect($.ajaxWithPrefix).toHaveBeenCalled();
-                expect(Caption.hideCaptions).toHaveBeenCalledWith(true);
+                expect(Caption.hideCaptions).toHaveBeenCalledWith(true, false);
             });
 
             it('on success: on touch devices', function () {
@@ -529,17 +528,43 @@
                 expect(Caption.loaded).toBeTruthy();
             });
 
-            it('on error: captions are hidden', function () {
+            msg = 'on error: captions are hidden if there are no transcripts';
+            it(msg, function () {
+                spyOn(Caption, 'fetchAvailableTranslations');
                 $.ajax.andCallFake(function (settings) {
-                    settings.error();
+                    settings.error([]);
                 });
+
+                state.config.transcriptLanguages = {};
 
                 Caption.fetchCaption();
 
                 expect($.ajaxWithPrefix).toHaveBeenCalled();
+                expect(Caption.fetchAvailableTranslations).not.toHaveBeenCalled();
                 expect(Caption.hideCaptions.mostRecentCall.args)
                     .toEqual([true, false]);
                 expect(Caption.hideSubtitlesEl).toBeHidden();
+            });
+
+            msg = 'on error: fetch available translations if there are ' +
+                    'additional transcripts';
+            xit(msg, function () {
+                $.ajax
+                    .andCallFake(function (settings) {
+                        settings.error([]);
+                    });
+
+                state.config.transcriptLanguages = {
+                    'en': 'English',
+                    'uk': 'Ukrainian',
+                };
+
+                spyOn(Caption, 'fetchAvailableTranslations');
+                Caption.fetchCaption();
+
+                expect($.ajaxWithPrefix).toHaveBeenCalled();
+                expect(Caption.fetchAvailableTranslations).toHaveBeenCalled();
+                expect(Caption.hideCaptions).not.toHaveBeenCalled();
             });
         });
 
