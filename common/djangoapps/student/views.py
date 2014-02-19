@@ -140,6 +140,15 @@ def _get_date_for_press(publish_date):
     return date
 
 
+def embargo(request):
+    """
+    Render the embargo page.
+
+    Explains to the user why they are not able to access a particular embargoed course.
+    """
+    return render_to_response('static_templates/embargo.html')
+
+
 def press(request):
     json_articles = cache.get("student_press_json_articles")
     if json_articles is None:

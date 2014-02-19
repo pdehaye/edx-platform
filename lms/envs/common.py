@@ -1051,6 +1051,8 @@ INSTALLED_APPS = (
     # Monitor the status of services
     'service_status',
 
+    'embargo',
+
     # For asset pipelining
     'edxmako',
     'pipeline',

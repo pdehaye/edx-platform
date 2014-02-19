@@ -104,6 +104,7 @@ if not settings.FEATURES["USE_CUSTOM_THEME"]:
         url(r'^jobs$', 'static_template_view.views.render',
             {'template': 'jobs.html'}, name="jobs"),
         url(r'^press$', 'student.views.press', name="press"),
+        url(r'^embargo$', 'student.views.embargo', name="embargo"),
         url(r'^media-kit$', 'static_template_view.views.render',
             {'template': 'media-kit.html'}, name="media-kit"),
         url(r'^faq$', 'static_template_view.views.render',
