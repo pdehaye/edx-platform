@@ -11,7 +11,7 @@ from edxmako.shortcuts import render_to_string
 from xmodule_modifiers import replace_static_urls, wrap_xblock
 from xmodule.error_module import ErrorDescriptor
 from xmodule.exceptions import NotFoundError, ProcessingError
-from xmodule.modulestore.django import modulestore, loc_mapper
+from xmodule.modulestore.django import modulestore, loc_mapper, ModuleI18nService
 from xmodule.modulestore.locator import Locator
 from xmodule.x_module import ModuleSystem
 from xblock.runtime import KvsFieldData
@@ -131,6 +131,9 @@ def _preview_module_system(request, descriptor):
         # get_user_role accepts a location or a CourseLocator.
         # If descriptor.location is a CourseLocator, course_id is unused.
         get_user_role=lambda: get_user_role(request.user, descriptor.location, course_id),
+        services={
+            "i18n": ModuleI18nService(),
+        },
     )
 
 
