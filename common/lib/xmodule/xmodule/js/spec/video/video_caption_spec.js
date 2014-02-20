@@ -109,7 +109,7 @@
 
             });
 
-            describe('renderLanguages', function () {
+            describe('renderLanguageMenu', function () {
                 describe('is rendered', function () {
                     it('if languages more than 1', function () {
                         state = jasmine.initializePlayer();
@@ -565,6 +565,77 @@
                 expect($.ajaxWithPrefix).toHaveBeenCalled();
                 expect(Caption.fetchAvailableTranslations).toHaveBeenCalled();
                 expect(Caption.hideCaptions).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('fetchAvailableTranslations', function () {
+            var Caption, msg;
+
+            beforeEach(function () {
+                state = jasmine.initializePlayer();
+                Caption = state.videoCaption;
+                spyOn($, 'ajaxWithPrefix').andCallThrough();
+                spyOn(Caption, 'hideCaptions');
+                spyOn(Caption, 'fetchCaption');
+                spyOn(Caption, 'renderLanguageMenu');
+            });
+
+            it('request created with correct parameters', function () {
+                Caption.fetchAvailableTranslations();
+
+                expect($.ajaxWithPrefix).toHaveBeenCalledWith({
+                    url: '/transcript/available_translations',
+                    notifyOnError: false,
+                    success: jasmine.any(Function),
+                    error: jasmine.any(Function)
+                });
+            });
+
+            msg = 'on succes: language menu is rendered if translations available';
+            it(msg, function () {
+                state.config.transcriptLanguages = {
+                    'en': 'English',
+                    'uk': 'Ukrainian',
+                    'de': 'German'
+                };
+                Caption.fetchAvailableTranslations();
+
+                expect($.ajaxWithPrefix).toHaveBeenCalled();
+                expect(Caption.fetchCaption).toHaveBeenCalled();
+                expect(state.config.transcriptLanguages).toEqual({
+                    'uk': 'Ukrainian',
+                    'de': 'German'
+                });
+                expect(Caption.renderLanguageMenu).toHaveBeenCalledWith({
+                    'uk': 'Ukrainian',
+                    'de': 'German'
+                });
+            });
+
+            msg = 'on succes: language menu isn\'t rendered if translations unavailable';
+            it(msg, function () {
+                state.config.transcriptLanguages = {
+                    'en': 'English',
+                    'ru': 'Russian'
+                };
+                Caption.fetchAvailableTranslations();
+
+                expect($.ajaxWithPrefix).toHaveBeenCalled();
+                expect(Caption.fetchCaption).not.toHaveBeenCalled();
+                expect(state.config.transcriptLanguages).toEqual({});
+                expect(Caption.renderLanguageMenu).not.toHaveBeenCalled();
+            });
+
+            msg = 'on error: captions are hidden if there are no transcript';
+            it(msg, function () {
+                $.ajax.andCallFake(function (settings) {
+                    settings.error();
+                });
+                Caption.fetchAvailableTranslations();
+
+                expect($.ajaxWithPrefix).toHaveBeenCalled();
+                expect(Caption.hideCaptions).toHaveBeenCalledWith(true, false);
+                expect(Caption.hideSubtitlesEl).toBeHidden();
             });
         });
 

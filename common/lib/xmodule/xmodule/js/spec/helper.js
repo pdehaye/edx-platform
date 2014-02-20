@@ -145,15 +145,7 @@
             } else if (settings.url == '/transcript/translation') {
                 return settings.success(jasmine.stubbedCaption);
             } else if (settings.url == '/transcript/available_translations') {
-                callCallback = function (callback) {
-                    callback.call(window, {});
-                };
-
-                return {
-                    always: callCallback,
-                    error: callCallback,
-                    done: callCallback
-                };
+                return settings.success(['uk', 'de']);
             } else if (settings.url.match(/.+\/problem_get$/)) {
                 return settings.success({
                     html: readFixtures('problem_content.html')

@@ -64,7 +64,7 @@ function () {
             play: play,
             renderCaption: renderCaption,
             renderElements: renderElements,
-            renderLanguages: renderLanguages,
+            renderLanguageMenu: renderLanguageMenu,
             reRenderCaption: reRenderCaption,
             resize: resize,
             scrollCaption: scrollCaption,
@@ -115,7 +115,7 @@ function () {
         Caption.hideSubtitlesEl = this.el.find('a.hide-subtitles');
 
         if (_.keys(languages).length) {
-            Caption.renderLanguages(languages);
+            Caption.renderLanguageMenu(languages);
 
             if (!Caption.fetchCaption()) {
                 Caption.hideCaptions(true);
@@ -287,45 +287,13 @@ function () {
                     ', MESSAGE:', '' + errorThrown
                 );
 
-                var languages = self.config.transcriptLanguages,
-                    hideCaptionsHelper = function () {
-                        Caption.hideCaptions(true, false);
-                        Caption.hideSubtitlesEl.hide();
-                    };
-
                 // If initial list of languages has more than 1 item, check
                 // for availability other transcripts.
-                if (_.keys(languages).length > 1) {
-                    Caption.fetchAvailableTranslations()
-                        .done(function (response) {
-                            var languages = self.config.transcriptLanguages,
-                                transcripts = _.pick(languages, response);
-
-                            // Update property with available currently translations.
-                            self.config.transcriptLanguages = transcripts;
-                            // Remove an old language menu.
-                            Caption.container.find('.langs-list').remove();
-
-                            if (_.keys(transcripts).length) {
-                                // And try again to fetch transcript.
-                                Caption.fetchCaption();
-                                Caption.renderLanguages(transcripts);
-                            }
-                        })
-                        .fail(function (jqXHR, textStatus, errorThrown) {
-                            console.log(
-                                '[Video info]: ERROR while fetching list of ' +
-                                'available translations.'
-                            );
-                            console.log(
-                                '[Video info]: STATUS:', textStatus +
-                                ', MESSAGE:', '' + errorThrown
-                            );
-
-                            hideCaptionsHelper();
-                        });
+                if (_.keys(self.config.transcriptLanguages).length > 1) {
+                    Caption.fetchAvailableTranslations();
                 } else {
-                    hideCaptionsHelper();
+                    Caption.hideCaptions(true, false);
+                    Caption.hideSubtitlesEl.hide();
                 }
             }
         });
@@ -334,11 +302,40 @@ function () {
     }
 
     function fetchAvailableTranslations() {
-        var self = this;
+        var self = this,
+            Caption = this.videoCaption;
 
         return $.ajaxWithPrefix({
             url: self.config.transcriptAvailableTranslationsUrl,
-            notifyOnError: false
+            notifyOnError: false,
+            success: function (response) {
+                var currentLanguages = self.config.transcriptLanguages,
+                    newLanguages = _.pick(currentLanguages, response);
+
+                // Update property with available currently translations.
+                self.config.transcriptLanguages = newLanguages;
+                // Remove an old language menu.
+                Caption.container.find('.langs-list').remove();
+
+                if (_.keys(newLanguages).length) {
+                    // And try again to fetch transcript.
+                    Caption.fetchCaption();
+                    Caption.renderLanguageMenu(newLanguages);
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.log(
+                    '[Video info]: ERROR while fetching list of ' +
+                    'available translations.'
+                );
+                console.log(
+                    '[Video info]: STATUS:', textStatus +
+                    ', MESSAGE:', '' + errorThrown
+                );
+
+                Caption.hideCaptions(true, false);
+                Caption.hideSubtitlesEl.hide();
+            }
         });
     }
 
@@ -354,7 +351,7 @@ function () {
         this.videoCaption.setSubtitlesHeight();
     }
 
-    function renderLanguages(languages) {
+    function renderLanguageMenu(languages) {
         var self = this,
             menu = $('<ol class="langs-list menu">'),
             currentLang = this.getCurrentLanguage();
