@@ -272,7 +272,10 @@ class Location(_LocationBase):
         """
         Given a org/course/name course_id, return a dict of {org: org, course: course, name: name}
         """
-        return COURSE_ID_RE.match(course_id).groupdict()
+        match = COURSE_ID_RE.match(course_id)
+        if match is None:
+            raise ValueError("{} is not of form ORG/COURSE/NAME".format(course_id))
+        return match.groupdict()
 
     def _replace(self, **kwargs):
         """
