@@ -76,13 +76,8 @@ def save_subs_to_store(subs, subs_id, item, language='en'):
     """
     filedata = json.dumps(subs, indent=2)
     mime_type = 'application/json'
-    if language == 'en':
-        filename = 'subs_{0}.srt.sjson'.format(subs_id)
-    else:
-        filename = '{0}_subs_{1}.srt.sjson'.format(language, subs_id)
-    content_location = StaticContent.compute_location(
-        item.location.org, item.location.course, filename
-    )
+    filename = subs_filename(subs_id, language)
+    content_location = asset_location(item.location, filename)
     content = StaticContent(content_location, filename, mime_type, filedata)
     contentstore().save(content)
     from cache_toolbox.core import del_cached_content
@@ -197,7 +192,7 @@ def remove_subs_from_store(subs_id, item, lang='en'):
     Remove from store, if transcripts content exists.
     """
     try:
-        content = asset(location, subs_id, lang)
+        content = asset(item.location, subs_id, lang)
         contentstore().delete(content.get_id())
         from cache_toolbox.core import del_cached_content
         del_cached_content(content.location)
