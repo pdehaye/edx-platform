@@ -40,6 +40,7 @@ from .transcripts_utils import (
     generate_sjson_for_all_speeds,
     youtube_speed_dict
 )
+
 from .video_utils import create_youtube_string
 
 from xmodule.modulestore.inheritance import InheritanceKeyValueStore
@@ -340,6 +341,14 @@ class VideoModule(VideoFields, XModule):
         `available_translations`: returns list of languages, for which SRT files exist. For 'en' check if SJSON exists.
         """
         if dispatch == 'translation':
+            if request.method == 'DELETE':
+                try:
+                    # TODO: Implement logic of removing
+                    return Response(status=204)
+                except:
+                    return Response("Failed to delete", status=400)
+
+
             if 'language' not in request.GET or 'videoId' not in request.GET:
                 log.info("Invalid /transcript GET parameters.")
                 return Response(status=400)
@@ -526,6 +535,8 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
 
         editable_fields['transcripts']['languages'] = languages
         editable_fields['transcripts']['type'] = 'VideoDict'
+        # @TODO: fix link
+        editable_fields['transcripts']['urlRoot'] = '/preview' + self.runtime.handler_url(self, 'transcript').rstrip('/?') + '/translation'
 
         return editable_fields
 
