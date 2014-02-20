@@ -28,6 +28,12 @@ URL_RE = re.compile("""
     (@(?P<revision>[^/]+))?
     """, re.VERBOSE)
 
+COURSE_ID_RE = re.compile("""
+    (?P<org>[^/]+)/
+    (?P<course>[^/]+)/
+    (?P<name>.*)
+    """, re.VERBOSE)
+
 # TODO (cpennington): We should decide whether we want to expand the
 # list of valid characters in a location
 INVALID_CHARS = re.compile(r"[^\w.%-]", re.UNICODE)
@@ -260,6 +266,13 @@ class Location(_LocationBase):
             raise InvalidLocationError(u'Cannot call course_id for {0} because it is not of category course'.format(self))
 
         return "/".join([self.org, self.course, self.name])
+
+    @staticmethod
+    def parse_course_id(course_id):
+        """
+        Given a org/course/name course_id, return a dict of {org: org, course: course, name: name}
+        """
+        return COURSE_ID_RE.match(course_id).groupdict()
 
     def _replace(self, **kwargs):
         """
