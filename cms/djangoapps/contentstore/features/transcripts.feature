@@ -589,11 +589,13 @@ Feature: CMS Transcripts
 
     #32
     Scenario: After clearing Transcripts field in the Advanced tab "not found" message should be visible w/o saving
-        Given I have created a Video component with subtitles "t_not_exist"
+        Given I have created a Video component
         And I edit the component
 
         And I enter a "t_not_exist.mp4" source to field number 1
-        Then I see status message "found"
+        Then I see status message "not found"
+        And I upload the transcripts file "chinese_transcripts.srt"
+        Then I see status message "uploaded_successfully"
 
         And I open tab "Advanced"
         And I set value "" to the field "Transcript (primary)"
