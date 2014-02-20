@@ -1284,11 +1284,9 @@ LINKEDIN_API = {
 MAX_FAILED_LOGIN_ATTEMPTS_ALLOWED = 5
 MAX_FAILED_LOGIN_ATTEMPTS_LOCKOUT_PERIOD_SECS = 15 * 60
 
-
-
 # Source:
 # http://loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt according to http://en.wikipedia.org/wiki/ISO_639-1
-ALL_LANGUAGES =(
+ALL_LANGUAGES = (
     [u"aa", u"Afar"],
     [u"ab", u"Abkhazian"],
     [u"af", u"Afrikaans"],
@@ -1474,4 +1472,3 @@ ALL_LANGUAGES =(
     [u"za", u"Zhuang; Chuang"],
     [u"zu", u"Zulu"]
 )
-

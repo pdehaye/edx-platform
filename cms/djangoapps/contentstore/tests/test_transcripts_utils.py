@@ -206,7 +206,7 @@ class TestDownloadYoutubeSubs(ModuleStoreTestCase):
         self.clear_subs_content(good_youtube_subs)
 
         with patch('xmodule.video_module.transcripts_utils.requests.get') as mock_get:
-            mock_get.return_value=Mock(status_code=200, text=response, content=response)
+            mock_get.return_value = Mock(status_code=200, text=response, content=response)
             # Check transcripts_utils.GetTranscriptsFromYouTubeException not thrown
             transcripts_utils.download_youtube_subs(good_youtube_subs, self.course, settings)
 
@@ -240,7 +240,7 @@ class TestDownloadYoutubeSubs(ModuleStoreTestCase):
     @patch('xmodule.video_module.transcripts_utils.requests.get')
     def test_fail_downloading_subs(self, mock_get):
 
-        mock_get.return_value=Mock(status_code=404, text='Error 404')
+        mock_get.return_value = Mock(status_code=404, text='Error 404')
 
         bad_youtube_subs = {
             0.5: 'BAD_YOUTUBE_ID1',
@@ -454,14 +454,14 @@ class TestYoutubeTranscripts(unittest.TestCase):
     """
     @patch('xmodule.video_module.transcripts_utils.requests.get')
     def test_youtube_bad_status_code(self, mock_get):
-        mock_get.return_value=Mock(status_code=404, text='test')
+        mock_get.return_value = Mock(status_code=404, text='test')
         youtube_id = 'bad_youtube_id'
         with self.assertRaises(transcripts_utils.GetTranscriptsFromYouTubeException):
             transcripts_utils.get_transcripts_from_youtube(youtube_id, settings, ugettext)
 
     @patch('xmodule.video_module.transcripts_utils.requests.get')
     def test_youtube_empty_text(self, mock_get):
-        mock_get.return_value=Mock(status_code=200, text='')
+        mock_get.return_value = Mock(status_code=200, text='')
         youtube_id = 'bad_youtube_id'
         with self.assertRaises(transcripts_utils.GetTranscriptsFromYouTubeException):
             transcripts_utils.get_transcripts_from_youtube(youtube_id, settings, ugettext)
@@ -482,7 +482,7 @@ class TestYoutubeTranscripts(unittest.TestCase):
         }
         youtube_id = 'good_youtube_id'
         with patch('xmodule.video_module.transcripts_utils.requests.get') as mock_get:
-            mock_get.return_value=Mock(status_code=200, text=response, content=response)
+            mock_get.return_value = Mock(status_code=200, text=response, content=response)
             transcripts = transcripts_utils.get_transcripts_from_youtube(youtube_id, settings, ugettext)
         self.assertEqual(transcripts, expected_transcripts)
         mock_get.assert_called_with('http://video.google.com/timedtext', params={'lang': 'en', 'v': 'good_youtube_id'})
