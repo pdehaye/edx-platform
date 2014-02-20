@@ -23,7 +23,6 @@ from collections import OrderedDict
 
 from django.conf import settings
 
-from xmodule.modulestore.django import modulestore
 from xmodule.x_module import XModule, module_attr
 from xmodule.editing_module import TabsEditingDescriptor
 from xmodule.raw_module import EmptyDataRawDescriptor
@@ -433,6 +432,7 @@ class VideoModule(VideoFields, XModule):
 class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor):
     """Descriptor for `VideoModule`."""
     module_class = VideoModule
+    transcript = module_attr('transcript')
 
     tabs = [
         {
@@ -493,7 +493,7 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
         Save module with updated metadata to database."
         """
         self.save()
-        modulestore().update_item(self, user.id if user else None)
+        self.runtime.modulestore.update_item(self, user.id if user else None)
 
     @property
     def editable_metadata_fields(self):
