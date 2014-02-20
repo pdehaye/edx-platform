@@ -142,33 +142,37 @@ class TestVideoTranscriptTranslation(TestVideo):
         'data': DATA
     }
 
+    def setUp(self):
+        super(TestVideoTranscriptTranslation, self).setUp()
+        self.item_descriptor.render('student_view')
+        self.item = self.item_descriptor.xmodule_runtime.xmodule_instance
+
     def test_language_is_not_supported(self):
         request = Request.blank('/download?language=ru')
-        response = self.item_descriptor.transcript(request=request, dispatch='download')
+        response = self.item.transcript(request=request, dispatch='download')
         self.assertEqual(response.status, '404 Not Found')
 
     def test_download_transcript_not_exist(self):
         request = Request.blank('/download?language=en')
-        response = self.item_descriptor.transcript(request=request, dispatch='download')
+        response = self.item.transcript(request=request, dispatch='download')
         self.assertEqual(response.status, '404 Not Found')
 
     @patch('xmodule.video_module.VideoModule.get_transcript', return_value='Subs!')
     def test_download_exist(self, __):
         request = Request.blank('/download?language=en')
-        response = self.item_descriptor.transcript(request=request, dispatch='download')
+        response = self.item.transcript(request=request, dispatch='download')
         self.assertEqual(response.body, 'Subs!')
 
     def test_translation_fails(self):
         # No videoId
         request = Request.blank('/translation?language=ru')
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         self.assertEqual(response.status, '400 Bad Request')
 
         # Language is not in available languages
         request = Request.blank('/translation?language=ru&videoId=12345')
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         self.assertEqual(response.status, '404 Not Found')
-
 
     def test_translaton_en_success(self):
         subs = {"start": [10,], "end": [100,], "text": [ "Hi, welcome to Edx.",]}
@@ -176,13 +180,9 @@ class TestVideoTranscriptTranslation(TestVideo):
         _upload_sjson_file(good_sjson, self.item_descriptor.location)
         subs_id = _get_subs_id(good_sjson.name)
 
-        # to get instance
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-
-        item.sub = subs_id
+        self.item.sub = subs_id
         request = Request.blank('/translation?language=en&videoId={}'.format(subs_id))
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         self.assertDictEqual(json.loads(response.body), subs)
 
     def test_translaton_non_en_non_youtube_success(self):
@@ -196,14 +196,10 @@ class TestVideoTranscriptTranslation(TestVideo):
         _upload_file(self.non_en_file, self.item_descriptor.location, os.path.split(self.non_en_file.name)[1])
         subs_id = _get_subs_id(self.non_en_file.name)
 
-        # to get instance
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
         # manually clean youtube_id_1_0, as it has default value
-        item.youtube_id_1_0 = ""
-
+        self.item.youtube_id_1_0 = ""
         request = Request.blank('/translation?language=uk&videoId={}'.format(subs_id))
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         self.assertDictEqual(json.loads(response.body), subs)
 
     def test_translation_non_en_youtube(self):
@@ -216,20 +212,17 @@ class TestVideoTranscriptTranslation(TestVideo):
         self.non_en_file.seek(0)
         _upload_file(self.non_en_file, self.item_descriptor.location, os.path.split(self.non_en_file.name)[1])
         subs_id = _get_subs_id(self.non_en_file.name)
-        # to get instance
 
         # youtube 1_0 request, will generate for all speeds for existing ids
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-        item.youtube_id_1_0 = subs_id
-        item.youtube_id_0_75 = '0_75'
+        self.item.youtube_id_1_0 = subs_id
+        self.item.youtube_id_0_75 = '0_75'
         request = Request.blank('/translation?language=uk&videoId={}'.format(subs_id))
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         self.assertDictEqual(json.loads(response.body), subs)
 
         # 0_75 subs are exist
         request = Request.blank('/translation?language=uk&videoId={}'.format('0_75'))
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         calculated_0_75 = {
             u'end': [75],
             u'start': [9],
@@ -238,10 +231,9 @@ class TestVideoTranscriptTranslation(TestVideo):
         ]}
         self.assertDictEqual(json.loads(response.body), calculated_0_75)
         # 1_5 will be generated from 1_0
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-        item.youtube_id_1_5 = '1_5'
+        self.item.youtube_id_1_5 = '1_5'
         request = Request.blank('/translation?language=uk&videoId={}'.format('1_5'))
-        response = self.item_descriptor.transcript(request=request, dispatch='translation')
+        response = self.item.transcript(request=request, dispatch='translation')
         calculated_1_5 = {
             u'end': [150],
             u'start': [18],
@@ -269,10 +261,12 @@ class TestVideoTranscriptsDownload(TestVideo):
     }
     METADATA = {}
 
-    def test_good_transcript(self):
+    def setUp(self):
+        super(TestVideoTranscriptsDownload, self).setUp()
         self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
+        self.item = self.item_descriptor.xmodule_runtime.xmodule_instance
 
+    def test_good_transcript(self):
         good_sjson = _create_file(content=textwrap.dedent("""\
                 {
                   "start": [
@@ -290,9 +284,9 @@ class TestVideoTranscriptsDownload(TestVideo):
                 }
             """))
 
-        _upload_sjson_file(good_sjson, self.item_descriptor.location)
-        item.sub = _get_subs_id(good_sjson.name)
-        text = item.get_transcript()
+        _upload_sjson_file(good_sjson, self.item.location)
+        self.item.sub = _get_subs_id(good_sjson.name)
+        text = self.item.get_transcript()
         expected_text = textwrap.dedent("""\
             0
             00:00:00,270 --> 00:00:02,720
@@ -307,28 +301,19 @@ class TestVideoTranscriptsDownload(TestVideo):
         self.assertEqual(text, expected_text)
 
     def test_not_found_error(self):
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-
         with self.assertRaises(NotFoundError):
-            item.get_transcript()
+            self.item.get_transcript()
 
     def test_value_error(self):
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-
         good_sjson = _create_file(content='bad content')
 
-        _upload_sjson_file(good_sjson, self.item_descriptor.location)
-        item.sub = _get_subs_id(good_sjson.name)
+        _upload_sjson_file(good_sjson, self.item.location)
+        self.item.sub = _get_subs_id(good_sjson.name)
 
         with self.assertRaises(ValueError):
-            item.get_transcript()
+            self.item.get_transcript()
 
     def test_key_error(self):
-        self.item_descriptor.render('student_view')
-        item = self.item_descriptor.xmodule_runtime.xmodule_instance
-
         good_sjson = _create_file(content="""
                 {
                   "start": [
@@ -342,12 +327,8 @@ class TestVideoTranscriptsDownload(TestVideo):
                 }
             """)
 
-        _upload_sjson_file(good_sjson, self.item_descriptor.location)
-        item.sub = _get_subs_id(good_sjson.name)
+        _upload_sjson_file(good_sjson, self.item.location)
+        self.item.sub = _get_subs_id(good_sjson.name)
 
         with self.assertRaises(KeyError):
-            item.get_transcript()
-
-
-
-
+            self.item.get_transcript()

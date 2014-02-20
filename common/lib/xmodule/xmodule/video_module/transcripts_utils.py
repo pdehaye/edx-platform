@@ -13,7 +13,7 @@ from lxml import etree
 from xmodule.exceptions import NotFoundError
 from xmodule.contentstore.content import StaticContent
 from xmodule.contentstore.django import contentstore
-from xmodule.modulestore import Location
+
 
 log = logging.getLogger(__name__)
 

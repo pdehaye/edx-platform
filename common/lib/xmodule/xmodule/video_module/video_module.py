@@ -23,6 +23,7 @@ from collections import OrderedDict
 
 from django.conf import settings
 
+from xmodule.modulestore.django import modulestore
 from xmodule.x_module import XModule, module_attr
 from xmodule.editing_module import TabsEditingDescriptor
 from xmodule.raw_module import EmptyDataRawDescriptor
@@ -429,20 +430,9 @@ class VideoModule(VideoFields, XModule):
         return sjson_transcript
 
 
-    def save_with_metadata(self, user):
-        """
-        Save module with updated metadata to database."
-        """
-        self.save()
-        from contentstore.utils import get_modulestore
-        store = get_modulestore(Location(self.id))
-        store.update_item(self, user.id if user else None)
-
-
 class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor):
     """Descriptor for `VideoModule`."""
     module_class = VideoModule
-    transcript = module_attr('transcript')
 
     tabs = [
         {
@@ -497,6 +487,13 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
         download_track = editable_fields['download_track']
         if not download_track['explicitly_set'] and self.track:
             self.download_track = True
+
+    def save_with_metadata(self, user):
+        """
+        Save module with updated metadata to database."
+        """
+        self.save()
+        modulestore().update_item(self, user.id if user else None)
 
     @property
     def editable_metadata_fields(self):
