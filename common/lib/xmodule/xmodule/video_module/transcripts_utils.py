@@ -18,19 +18,19 @@ from xmodule.contentstore.django import contentstore
 log = logging.getLogger(__name__)
 
 
-class TranscriptException(Exception):
+class TranscriptException(Exception):  # pylint disable=C0111
     pass
 
 
-class TranscriptsGenerationException(Exception):
+class TranscriptsGenerationException(Exception):  # pylint disable=C0111
     pass
 
 
-class GetTranscriptsFromYouTubeException(Exception):
+class GetTranscriptsFromYouTubeException(Exception):  # pylint disable=C0111
     pass
 
 
-class TranscriptsRequestValidationException(Exception):
+class TranscriptsRequestValidationException(Exception):  # pylint disable=C0111
     pass
 
 
@@ -214,9 +214,9 @@ def generate_subs_from_source(speed_subs, subs_type, subs_filedata, item, langua
         raise TranscriptsGenerationException(_("We support only SubRip (*.srt) transcripts format."))
     try:
         srt_subs_obj = SubRipFile.from_string(subs_filedata)
-    except Exception as e:
+    except Exception as ex:
         msg = _("Something wrong with SubRip transcripts file during parsing. Inner message is {error_message}").format(
-            error_message=e.message
+            error_message=ex.message
         )
         raise TranscriptsGenerationException(msg)
     if not srt_subs_obj:
@@ -359,10 +359,10 @@ def manage_video_subtitles_save(item, user, old_metadata=None, generate_translat
             old_langs = set(old_metadata.get('transcripts', {})) if old_metadata else set()
             new_langs = set(item.transcripts)
 
-            for lang in old_langs.difference(new_langs): # 2a
-                    for video_id in possible_video_id_list:
-                        if video_id:
-                            remove_subs_from_store(video_id, item, lang)
+            for lang in old_langs.difference(new_langs):  # 2a
+                for video_id in possible_video_id_list:
+                    if video_id:
+                        remove_subs_from_store(video_id, item, lang)
 
             for lang in new_langs:  # 2b
                 generate_sjson_for_all_speeds(
@@ -370,7 +370,7 @@ def manage_video_subtitles_save(item, user, old_metadata=None, generate_translat
                     item.transcripts[lang],
                     {speed: subs_id for subs_id, speed in youtube_speed_dict(item).iteritems()},
                     lang,
-                    )
+                )
 
 
 def youtube_speed_dict(item):
@@ -426,8 +426,8 @@ def generate_sjson_for_all_speeds(item, user_filename, result_subs_dict, lang):
     """
     try:
         srt_transcripts = contentstore().find(asset_location(item.location, user_filename))
-    except NotFoundError as e:
-        raise TranscriptException("{}: Can't find uploaded transcripts: {}".format(e.message, user_filename))
+    except NotFoundError as ex:
+        raise TranscriptException("{}: Can't find uploaded transcripts: {}".format(ex.message, user_filename))
 
     if not lang:
         lang = item.transcript_language

@@ -88,6 +88,7 @@ def check_video_speed(_step, player_id, speed):
     speed_css = '.speeds p.active'
     assert world.css_has_text(speed_css, '{0}x'.format(speed))
 
+
 def add_video_to_course(course, player_mode, hashes, display_name='Video'):
     category = 'video'
 
@@ -127,15 +128,13 @@ def add_video_to_course(course, player_mode, hashes, display_name='Video'):
         kwargs['metadata'].update(hashes[0])
 
     if 'transcripts' in kwargs['metadata']:
-        kwargs['metadata']['transcripts'] = json.loads(kwargs['metadata']['transcripts']);
-
+        kwargs['metadata']['transcripts'] = json.loads(kwargs['metadata']['transcripts'])
 
         if 'sub' in kwargs['metadata']:
             _upload_file(kwargs['metadata']['sub'], 'en', world.scenario_dict['COURSE'].location)
 
         for lang, videoId in kwargs['metadata']['transcripts'].items():
             _upload_file(videoId, lang, world.scenario_dict['COURSE'].location)
-
 
     world.scenario_dict['VIDEO'] = world.ItemFactory.create(**kwargs)
 

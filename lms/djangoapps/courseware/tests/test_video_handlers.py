@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Video xmodule tests in mongo."""
 
-from mock import patch, PropertyMock
+from mock import patch
 import os
 import tempfile
 import textwrap
@@ -16,6 +16,7 @@ from . import BaseTestXmodule
 from .test_video_xml import SOURCE_XML
 from cache_toolbox.core import del_cached_content
 from xmodule.exceptions import NotFoundError
+
 
 def _create_srt_file(content=None):
     """
@@ -32,7 +33,11 @@ def _create_srt_file(content=None):
     srt_file.seek(0)
     return srt_file
 
+
 def _clear_assets(location):
+    """
+    Clear all assets for location.
+    """
     store = contentstore()
 
     content_location = StaticContent.compute_location(
@@ -46,27 +51,34 @@ def _clear_assets(location):
         id = StaticContent.get_id_from_location(asset_location)
         store.delete(id)
 
+
 def _get_subs_id(filename):
-        basename = os.path.splitext(os.path.basename(filename))[0]
-        return basename.replace('subs_', '').replace('.srt', '')
+    basename = os.path.splitext(os.path.basename(filename))[0]
+    return basename.replace('subs_', '').replace('.srt', '')
+
 
 def _create_file(content=''):
+    """
+    Create temporary subs_somevalue.srt.sjson file.
+    """
     sjson_file = tempfile.NamedTemporaryFile(prefix="subs_", suffix=".srt.sjson")
     sjson_file.content_type = 'application/json'
     sjson_file.write(textwrap.dedent(content))
     sjson_file.seek(0)
     return sjson_file
 
-def _upload_sjson_file(file, location, default_filename='subs_{}.srt.sjson'):
-    filename = default_filename.format(_get_subs_id(file.name))
-    _upload_file(file, location, filename)
 
-def _upload_file(file, location, filename):
-    mime_type = file.content_type
+def _upload_sjson_file(subs_file, location, default_filename='subs_{}.srt.sjson'):
+    filename = default_filename.format(_get_subs_id(subs_file.name))
+    _upload_file(subs_file, location, filename)
+
+
+def _upload_file(subs_file, location, filename):
+    mime_type = subs_file.content_type
     content_location = StaticContent.compute_location(
         location.org, location.course, filename
     )
-    content = StaticContent(content_location, filename, mime_type, file.read())
+    content = StaticContent(content_location, filename, mime_type, subs_file.read())
     contentstore().save(content)
     del_cached_content(content.location)
 
@@ -92,7 +104,6 @@ class TestVideo(BaseTestXmodule):
                 for _, response in responses.items()
                 ]).pop(),
             404)
-
 
     def test_handle_ajax(self):
 
@@ -126,6 +137,9 @@ class TestVideo(BaseTestXmodule):
 
 
 class TestVideoTranscriptTranslation(TestVideo):
+    """
+    Test video handlers that provide translation transcripts.
+    """
 
     non_en_file = _create_srt_file()
     DATA = """
@@ -175,7 +189,7 @@ class TestVideoTranscriptTranslation(TestVideo):
         self.assertEqual(response.status, '404 Not Found')
 
     def test_translaton_en_success(self):
-        subs = {"start": [10,], "end": [100,], "text": [ "Hi, welcome to Edx.",]}
+        subs = {"start": [10], "end": [100], "text": ["Hi, welcome to Edx."]}
         good_sjson = _create_file(json.dumps(subs))
         _upload_sjson_file(good_sjson, self.item_descriptor.location)
         subs_id = _get_subs_id(good_sjson.name)
@@ -186,12 +200,13 @@ class TestVideoTranscriptTranslation(TestVideo):
         self.assertDictEqual(json.loads(response.body), subs)
 
     def test_translaton_non_en_non_youtube_success(self):
-        subs =  {
+        subs = {
             u'end': [100],
             u'start': [12],
             u'text': [
             u'\u041f\u0440\u0438\u0432\u0456\u0442, edX \u0432\u0456\u0442\u0430\u0454 \u0432\u0430\u0441.'
-        ]}
+            ]
+        }
         self.non_en_file.seek(0)
         _upload_file(self.non_en_file, self.item_descriptor.location, os.path.split(self.non_en_file.name)[1])
         subs_id = _get_subs_id(self.non_en_file.name)
@@ -203,7 +218,7 @@ class TestVideoTranscriptTranslation(TestVideo):
         self.assertDictEqual(json.loads(response.body), subs)
 
     def test_translation_non_en_youtube(self):
-        subs =  {
+        subs = {
             u'end': [100],
             u'start': [12],
             u'text': [
@@ -228,7 +243,8 @@ class TestVideoTranscriptTranslation(TestVideo):
             u'start': [9],
             u'text': [
             u'\u041f\u0440\u0438\u0432\u0456\u0442, edX \u0432\u0456\u0442\u0430\u0454 \u0432\u0430\u0441.'
-        ]}
+            ]
+        }
         self.assertDictEqual(json.loads(response.body), calculated_0_75)
         # 1_5 will be generated from 1_0
         self.item.youtube_id_1_5 = '1_5'
@@ -239,7 +255,8 @@ class TestVideoTranscriptTranslation(TestVideo):
             u'start': [18],
             u'text': [
             u'\u041f\u0440\u0438\u0432\u0456\u0442, edX \u0432\u0456\u0442\u0430\u0454 \u0432\u0430\u0441.'
-        ]}
+            ]
+        }
         self.assertDictEqual(json.loads(response.body), calculated_1_5)
 
 

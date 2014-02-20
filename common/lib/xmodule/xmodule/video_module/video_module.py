@@ -13,6 +13,7 @@ in XML.
 import os
 import json
 import logging
+from operator import itemgetter
 
 from lxml import etree
 from pkg_resources import resource_string
@@ -255,13 +256,13 @@ class VideoModule(VideoFields, XModule):
             # there are no translations and English subtitles are not set by instructor.
             transcript_language = 'null'
 
-        ALL_LANGUAGES = {i[0]: i[1] for i in settings.ALL_LANGUAGES}
-        languages = {l: ALL_LANGUAGES[l] for l in self.transcripts};
+        all_languages = {i[0]: i[1] for i in settings.ALL_LANGUAGES}
+        languages = {lang: all_languages[lang] for lang in self.transcripts}
         if self.sub:
             languages.update({'en': 'English'})
 
         # OrderedDict for easy testing of rendered context in tests
-        transcript_languages = OrderedDict(sorted(languages.items(), key=lambda k: k[1]))
+        transcript_languages = OrderedDict(sorted(languages.items(), key=itemgetter(1)))
 
         return self.system.render_template('video.html', {
             'ajax_url': self.system.ajax_url + '/save_user_state',
@@ -336,9 +337,9 @@ class VideoModule(VideoFields, XModule):
                 self.transcript_language = lang
 
             try:
-                transcript =  self.translation(request.GET.get('videoId'))
-            except TranscriptException as e:
-                log.info(e.message)
+                transcript = self.translation(request.GET.get('videoId'))
+            except TranscriptException as ex:
+                log.info(ex.message)
                 response = Response(status=404)
             else:
                 response = Response(transcript)
@@ -349,7 +350,7 @@ class VideoModule(VideoFields, XModule):
                 subs = self.get_transcript()
             except (NotFoundError, ValueError, KeyError):
                 log.debug("Video@download exception")
-                response =  Response(status=404)
+                response = Response(status=404)
             else:
                 response = Response(
                     subs,
@@ -360,11 +361,11 @@ class VideoModule(VideoFields, XModule):
                 response.content_type = "application/x-subrip"
 
         elif dispatch == 'available_translations':
-            available_translations, langs= [], {}
+            available_translations, langs = [], {}
             if self.sub:
                 langs['en'] = self.sub
-            for lang, SRT_filename in self.transcripts.items():
-                 langs[lang] = os.path.splitext(SRT_filename)[0]
+            for lang, srt_filename in self.transcripts.items():
+                langs[lang] = os.path.splitext(srt_filename)[0]
             for lang, subs_id in langs.items():
                 try:
                     asset(self.location, subs_id, lang)
@@ -376,7 +377,7 @@ class VideoModule(VideoFields, XModule):
             response.content_type = 'application/json'
         else:  # unknown dispatch
             log.debug("Dispatch is not allowed")
-            response =  Response(status=404)
+            response = Response(status=404)
 
         return response
 
@@ -647,7 +648,7 @@ class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor
                 youtube_id = deserialize_field(cls.youtube_id_1_0, pieces[1])
                 ret[speed] = youtube_id
             except (ValueError, IndexError):
-                log.warning('Invalid YouTube ID: %s' % video)
+                log.warning('Invalid YouTube ID: %s', video)
         return ret
 
     @classmethod
