@@ -85,16 +85,16 @@ def save_subs_to_store(subs, subs_id, item, language='en'):
     return content_location
 
 
-def get_transcripts_from_youtube(youtube_id, settings, i18n):
+def get_transcripts_from_youtube(youtube_id, settings, _):
     """
     Gets transcripts from youtube for youtube_id.
 
     Parses only utf-8 encoded transcripts.
     Other encodings are not supported at the moment.
 
+    `_` is ugettext.
     Returns (status, transcripts): bool, dict.
     """
-    _ = i18n.ugettext
     utf8_parser = etree.XMLParser(encoding='utf-8')
 
     youtube_api = copy.deepcopy(settings.YOUTUBE_API)
@@ -126,7 +126,7 @@ def get_transcripts_from_youtube(youtube_id, settings, i18n):
     return {'start': sub_starts, 'end': sub_ends, 'text': sub_texts}
 
 
-def download_youtube_subs(youtube_subs, item, settings, i18n):
+def download_youtube_subs(youtube_subs, item, settings):
     """
     Download transcripts from Youtube and save them to assets.
 
@@ -137,7 +137,7 @@ def download_youtube_subs(youtube_subs, item, settings, i18n):
     Returns: None, if transcripts were successfully downloaded and saved.
     Otherwise raises GetTranscriptsFromYouTubeException.
     """
-    _ = i18n.ugettext
+    _ = item.runtime.service(item, "i18n").ugettext
     highest_speed = highest_speed_subs = None
     missed_speeds = []
     # Iterate from lowest to highest speed and try to do download transcripts
@@ -146,7 +146,7 @@ def download_youtube_subs(youtube_subs, item, settings, i18n):
         if not youtube_id:
             continue
         try:
-            subs = get_transcripts_from_youtube(youtube_id, settings, i18n)
+            subs = get_transcripts_from_youtube(youtube_id, settings, _)
             if not subs:  # if empty subs are returned
                 raise GetTranscriptsFromYouTubeException
         except GetTranscriptsFromYouTubeException:
@@ -213,7 +213,7 @@ def generate_subs_from_source(speed_subs, subs_type, subs_filedata, item, langua
     :param language: str, language of translation of transcripts
     :returns: True, if all subs are generated and saved successfully.
     """
-    _ = item.runtime.service(item, "i18n").ugettext  # FIXME CHECK TODO
+    _ = item.runtime.service(item, "i18n").ugettext
     if subs_type != 'srt':
         raise TranscriptsGenerationException(_("We support only SubRip (*.srt) transcripts format."))
     try:
