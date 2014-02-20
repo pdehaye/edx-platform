@@ -196,15 +196,8 @@ def remove_subs_from_store(subs_id, item, lang='en'):
     """
     Remove from store, if transcripts content exists.
     """
-    if lang != 'en':
-        filename = '{0}_subs_{1}.srt.sjson'.format(lang, subs_id)
-    else:
-        filename = 'subs_{0}.srt.sjson'.format(subs_id)
-    content_location = StaticContent.compute_location(
-        item.location.org, item.location.course, filename
-    )
     try:
-        content = contentstore().find(content_location)
+        content = asset(location, subs_id, lang)
         contentstore().delete(content.get_id())
         from cache_toolbox.core import del_cached_content
         del_cached_content(content.location)
