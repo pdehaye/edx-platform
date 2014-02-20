@@ -279,16 +279,6 @@ def generate_srt_from_sjson(sjson_subs, speed):
     return output
 
 
-def save_module(item, user):
-    """
-    Proceed with additional save operations.
-    """
-    item.save()
-    from contentstore.utils import get_modulestore
-    store = get_modulestore(Location(item.id))
-    store.update_item(item, user.id if user else None)
-
-
 def copy_or_rename_transcript(new_name, old_name, item, delete_old=False, user=None):
     """
     Renames `old_name` transcript file in storage to `new_name`.
@@ -303,7 +293,7 @@ def copy_or_rename_transcript(new_name, old_name, item, delete_old=False, user=N
     transcripts = contentstore().find(content_location).data
     save_subs_to_store(json.loads(transcripts), new_name, item)
     item.sub = new_name
-    save_module(item, user)
+    item.save_with_metadata(user)
     if delete_old:
         remove_subs_from_store(old_name, item)
 

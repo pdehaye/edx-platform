@@ -31,7 +31,6 @@ from xmodule.video_module.transcripts_utils import (
     generate_srt_from_sjson, remove_subs_from_store,
     download_youtube_subs, get_transcripts_from_youtube,
     copy_or_rename_transcript,
-    save_module,
     manage_video_subtitles_save,
     TranscriptsGenerationException,
     GetTranscriptsFromYouTubeException,
@@ -136,7 +135,7 @@ def upload_transcripts(request):
                 return error_response(response, "Can't find transcripts in storage for {}".format(sub_attr))
 
         item.sub = selected_name  # write one of  new subtitles names to item.sub attribute.
-        save_module(item, request.user)
+        item.save_with_metadata(request.user)
         response['subs'] = item.sub
         response['status'] = 'Success'
     else:
@@ -393,7 +392,7 @@ def choose_transcripts(request):
 
     if item.sub != html5_id:  # update sub value
         item.sub = html5_id
-        save_module(item, request.user)
+        item.save_with_metadata(request.user)
     response = {'status': 'Success',  'subs': item.sub}
     return JsonResponse(response)
 
@@ -424,7 +423,7 @@ def replace_transcripts(request):
         return error_response(response, e.message)
 
     item.sub = youtube_id
-    save_module(item, request.user)
+    item.save_with_metadata(request.user)
     response = {'status': 'Success',  'subs': item.sub}
     return JsonResponse(response)
 
@@ -523,7 +522,7 @@ def save_transcripts(request):
         for metadata_key, value in metadata.items():
             setattr(item, metadata_key, value)
 
-        save_module(item, request.user)  # item becomes updated with new values
+        item.save_with_metadata(request.user)  # item becomes updated with new values
 
         if new_sub:
             manage_video_subtitles_save(item, request.user)

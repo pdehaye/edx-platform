@@ -429,6 +429,16 @@ class VideoModule(VideoFields, XModule):
         return sjson_transcript
 
 
+    def save_with_metadata(self, user):
+        """
+        Save module with updated metadata to database."
+        """
+        self.save()
+        from contentstore.utils import get_modulestore
+        store = get_modulestore(Location(self.id))
+        store.update_item(self, user.id if user else None)
+
+
 class VideoDescriptor(VideoFields, TabsEditingDescriptor, EmptyDataRawDescriptor):
     """Descriptor for `VideoModule`."""
     module_class = VideoModule
