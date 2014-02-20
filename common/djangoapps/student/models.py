@@ -420,9 +420,7 @@ class CourseEnrollment(models.Model):
         if created:
             enrollment.mode = "honor"
             enrollment.is_active = False
-
-        # save enrollment to trigger 'assign_default_role' function for both new and already enrolled users
-        enrollment.save()
+            enrollment.save()
 
         return enrollment
 

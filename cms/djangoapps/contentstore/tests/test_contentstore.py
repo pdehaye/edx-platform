@@ -1386,7 +1386,9 @@ class ContentStoreTest(ModuleStoreTestCase):
         course_id = _get_course_id(test_course_data)
         self.assertTrue(are_permissions_roles_seeded(course_id))
         delete_course_and_groups(course_id, commit=True)
-        self.assertFalse(are_permissions_roles_seeded(course_id))
+        # should raise an exception for checking permissions on deleted course
+        with self.assertRaises(ItemNotFoundError):
+            self.assertFalse(are_permissions_roles_seeded(course_id))
 
     def test_forum_unseeding_with_multiple_courses(self):
         """Test new course creation and verify forum unseeding when there are multiple courses"""
@@ -1396,7 +1398,9 @@ class ContentStoreTest(ModuleStoreTestCase):
         # unseed the forums for the first course
         course_id = _get_course_id(test_course_data)
         delete_course_and_groups(course_id, commit=True)
-        self.assertFalse(are_permissions_roles_seeded(course_id))
+        # should raise an exception for checking permissions on deleted course
+        with self.assertRaises(ItemNotFoundError):
+            self.assertFalse(are_permissions_roles_seeded(course_id))
 
         second_course_id = _get_course_id(second_course_data)
         # permissions should still be there for the other course
@@ -1419,8 +1423,8 @@ class ContentStoreTest(ModuleStoreTestCase):
         # check that user's enrollment for this course is not deleted
         self.assertEqual(CourseEnrollment.enrollment_counts(course_id).get('total'), 1)
         self.assertTrue(CourseEnrollment.is_enrolled(self.user, course_id))
-        # check that user has no role for this course after deleting it
-        self.assertEqual(self.user.roles.count(), 0)
+        # check that user has role for this course even after deleting it
+        self.assertEqual(self.user.roles.count(), 1)
 
     def test_create_course_duplicate_course(self):
         """Test new course creation - error path"""

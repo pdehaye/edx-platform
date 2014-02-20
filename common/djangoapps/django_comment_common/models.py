@@ -34,7 +34,14 @@ def assign_default_role(sender, instance, **kwargs):
 
     # We've enrolled the student, so make sure they have the Student role
     role = Role.objects.get_or_create(course_id=instance.course_id, name="Student")[0]
-    instance.user.roles.add(role)
+    add_role_for_user(role, instance.user)
+
+
+def add_role_for_user(role, user):
+    """
+    Assign provided role to user
+    """
+    user.roles.add(role)
 
 
 class Role(models.Model):

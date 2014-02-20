@@ -43,6 +43,7 @@ from .component import (
     OPEN_ENDED_COMPONENT_TYPES, NOTE_COMPONENT_TYPES,
     ADVANCED_COMPONENT_POLICY_KEY)
 
+from django_comment_common.models import Role, add_role_for_user
 from django_comment_common.utils import seed_permissions_roles
 
 from student.models import CourseEnrollment
@@ -407,8 +408,19 @@ def create_new_course(request):
     # auto-enroll the course creator in the course so that "View Live" will
     # work.
     CourseEnrollment.enroll(request.user, new_course.location.course_id)
+    _users_assign_default_role(new_course.location)
 
     return JsonResponse({'url': new_location.url_reverse("course/", "")})
+
+
+def _users_assign_default_role(course_location):
+    """
+    Assign 'Student' role to all previous users (if any) for this course
+    """
+    enrollments = CourseEnrollment.objects.filter(course_id=course_location.course_id)
+    role, __ = Role.objects.get_or_create(course_id=course_location.course_id, name="Student")
+    for enrollment in enrollments:
+        add_role_for_user(role, enrollment.user)
 
 
 # pylint: disable=unused-argument

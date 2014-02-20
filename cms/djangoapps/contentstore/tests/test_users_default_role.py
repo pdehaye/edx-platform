@@ -32,14 +32,17 @@ class TestCourseListing(ModuleStoreTestCase):
 
         # create a course via the view handler to create course
         self.course_location = Location(['i4x', 'Org_1', 'Course_1', 'course', 'Run_1'])
-        self._create_course_with_give_location(self.course_location)
+        self._create_course_with_given_location(self.course_location)
 
-    def _create_course_with_give_location(self, course_location):
-        self.course_locator = loc_mapper().translate_location(
+    def _create_course_with_given_location(self, course_location):
+        """
+        Create course at provided location
+        """
+        course_locator = loc_mapper().translate_location(
             course_location.course_id, course_location, False, True
         )
         resp = self.client.ajax_post(
-            self.course_locator.url_reverse('course'),
+            course_locator.url_reverse('course'),
             {
                 'org': course_location.org,
                 'number': course_location.course,
@@ -66,15 +69,15 @@ class TestCourseListing(ModuleStoreTestCase):
         self.assertEqual(CourseEnrollment.enrollment_counts(course_id).get('total'), 1)
         self.assertTrue(CourseEnrollment.is_enrolled(self.user, course_id))
         # check that user has his default "Student" role for this course
-        self.assertEqual(self.user.roles.count(), 1)
-        self.assertEqual(self.user.roles.all()[0].name, 'Student')
+        self.assertEqual(self.user.roles.count(), 1)  # pylint: disable=no-member
+        self.assertEqual(self.user.roles.all()[0].name, 'Student')  # pylint: disable=no-member
 
         delete_course_and_groups(course_id, commit=True)
         # check that user's enrollment for this course is not deleted
         self.assertEqual(CourseEnrollment.enrollment_counts(course_id).get('total'), 1)
         self.assertTrue(CourseEnrollment.is_enrolled(self.user, course_id))
-        # check that user has no role for this course after deleting it
-        self.assertEqual(self.user.roles.count(), 0)
+        # check that user has role for this course even after deleting it
+        self.assertEqual(self.user.roles.count(), 1)  # pylint: disable=no-member
 
     def test_user_role_on_course_recreate(self):
         """
@@ -86,12 +89,12 @@ class TestCourseListing(ModuleStoreTestCase):
         self.assertEqual(CourseEnrollment.enrollment_counts(course_id).get('total'), 1)
         self.assertTrue(CourseEnrollment.is_enrolled(self.user, course_id))
         # check that user has his default "Student" role for this course
-        self.assertEqual(self.user.roles.count(), 1)
-        self.assertEqual(self.user.roles.all()[0].name, 'Student')
+        self.assertEqual(self.user.roles.count(), 1)  # pylint: disable=no-member
+        self.assertEqual(self.user.roles.all()[0].name, 'Student')  # pylint: disable=no-member
 
         # delete this course and recreate this course with same user
         delete_course_and_groups(course_id, commit=True)
-        resp = self._create_course_with_give_location(self.course_location)
+        resp = self._create_course_with_given_location(self.course_location)
         self.assertEqual(resp.status_code, 200)
 
         # check that user has his default "Student" role again for this course
