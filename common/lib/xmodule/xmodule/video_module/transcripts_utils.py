@@ -354,23 +354,31 @@ def manage_video_subtitles_save(item, user, old_metadata=None, generate_translat
                 sub_name, video_id
             )
 
-        # 2.
-        if generate_translation:
-            old_langs = set(old_metadata.get('transcripts', {})) if old_metadata else set()
-            new_langs = set(item.transcripts)
+    # 2.
+    if generate_translation:
+        old_langs = set(old_metadata.get('transcripts', {})) if old_metadata else set()
+        new_langs = set(item.transcripts)
 
-            for lang in old_langs.difference(new_langs):  # 2a
-                for video_id in possible_video_id_list:
-                    if video_id:
-                        remove_subs_from_store(video_id, item, lang)
+        for lang in old_langs.difference(new_langs):  # 2a
+            for video_id in possible_video_id_list:
+                if video_id:
+                    remove_subs_from_store(video_id, item, lang)
 
-            for lang in new_langs:  # 2b
+        reraised_message = ''
+        for lang in new_langs:  # 2b
+            try:
                 generate_sjson_for_all_speeds(
                     item,
                     item.transcripts[lang],
                     {speed: subs_id for subs_id, speed in youtube_speed_dict(item).iteritems()},
                     lang,
                 )
+            except TranscriptException as ex:
+                item.transcripts.pop(lang)  # remove key from transcripts because proper srt file does not exist in assets.
+                reraised_message += ' ' + ex.message
+        if reraised_message:
+            item.save_with_metadata(user)
+            raise TranscriptException(reraised_message)
 
 
 def youtube_speed_dict(item):

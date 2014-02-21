@@ -361,12 +361,14 @@ class VideoModule(VideoFields, XModule):
                 response.content_type = "application/x-subrip"
 
         elif dispatch == 'available_translations':
-            available_translations = ['en']
+            available_translations = []
             if self.sub:  # check if sjson exists for 'en'.
                 try:
                     asset(self.location, self.sub, 'en')
                 except NotFoundError:
-                    available_translations.remove('en')
+                    passs
+                else:
+                    available_translations = ['en']
             for lang in self.transcripts:
                 try:
                    asset(self.location, None, None, self.transcripts[lang])
