@@ -1388,7 +1388,7 @@ class ContentStoreTest(ModuleStoreTestCase):
         delete_course_and_groups(course_id, commit=True)
         # should raise an exception for checking permissions on deleted course
         with self.assertRaises(ItemNotFoundError):
-            self.assertFalse(are_permissions_roles_seeded(course_id))
+            are_permissions_roles_seeded(course_id)
 
     def test_forum_unseeding_with_multiple_courses(self):
         """Test new course creation and verify forum unseeding when there are multiple courses"""
@@ -1400,7 +1400,7 @@ class ContentStoreTest(ModuleStoreTestCase):
         delete_course_and_groups(course_id, commit=True)
         # should raise an exception for checking permissions on deleted course
         with self.assertRaises(ItemNotFoundError):
-            self.assertFalse(are_permissions_roles_seeded(course_id))
+            are_permissions_roles_seeded(course_id)
 
         second_course_id = _get_course_id(second_course_data)
         # permissions should still be there for the other course
@@ -1408,7 +1408,7 @@ class ContentStoreTest(ModuleStoreTestCase):
 
     def test_course_enrollments_and_roles_on_delete(self):
         """
-        Test that course deletion doesn't remove course enrollments but removes user's roles
+        Test that course deletion doesn't remove course enrollments or user's roles
         """
         test_course_data = self.assert_created_course(number_suffix=uuid4().hex)
         course_id = _get_course_id(test_course_data)

@@ -43,7 +43,7 @@ from .component import (
     OPEN_ENDED_COMPONENT_TYPES, NOTE_COMPONENT_TYPES,
     ADVANCED_COMPONENT_POLICY_KEY)
 
-from django_comment_common.models import Role, add_role_for_user
+from django_comment_common.models import assign_default_role
 from django_comment_common.utils import seed_permissions_roles
 
 from student.models import CourseEnrollment
@@ -207,7 +207,7 @@ def _accessible_courses_list_from_groups(request):
         course_ids.add(course_id.replace('/', '.').lower())
 
     for course_id in course_ids:
-        # get course_location with lowercase idget_item
+        # get course_location with lowercase id
         course_location = loc_mapper().translate_locator_to_location(
             CourseLocator(package_id=course_id), get_course=True, lower_only=True
         )
@@ -418,9 +418,8 @@ def _users_assign_default_role(course_location):
     Assign 'Student' role to all previous users (if any) for this course
     """
     enrollments = CourseEnrollment.objects.filter(course_id=course_location.course_id)
-    role, __ = Role.objects.get_or_create(course_id=course_location.course_id, name="Student")
     for enrollment in enrollments:
-        add_role_for_user(role, enrollment.user)
+        assign_default_role(course_location.course_id, enrollment.user)
 
 
 # pylint: disable=unused-argument
