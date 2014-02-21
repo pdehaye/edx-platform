@@ -1,5 +1,11 @@
 <%! from django.utils.translation import ugettext as _ %>
+% if xblock.location != xblock_context['root_xblock'].location:
+  % if xblock.has_children:
+<section class="wrapper-xblock level-nesting">
+  % else:
 <section class="wrapper-xblock level-element">
+  % endif
+% endif
     <header class="xblock-header">
         <div class="header-details">
             ${xblock.display_name | h}
@@ -22,7 +28,7 @@
                 <li class="action-item action-delete">
                     <a href="#" data-tooltip="${_("Delete")}" class="delete-button action-button">
                     <i class="icon-trash"></i>
-                    <span class="sr">${_("Delete this component")}</span>
+                    <span class="sr">${_("Delettestinge this component")}</span>
                     </a>
                 </li>
                 % endif
@@ -32,4 +38,6 @@
     <article class="xblock-render">
 ${content}
     </article>
+% if xblock.location != xblock_context['root_xblock'].location:
 </section>
+% endif

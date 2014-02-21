@@ -87,6 +87,7 @@ body.view-container  .content-primary{
       }
 
       .xblock-header {
+        display: flex;
         margin-bottom: 0;
         border-bottom: 1px solid $gray-l4;
         background-color: $gray-l6;

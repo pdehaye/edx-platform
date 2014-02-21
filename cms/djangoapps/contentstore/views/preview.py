@@ -37,7 +37,7 @@ log = logging.getLogger(__name__)
 
 
 @login_required
-def preview_handler(request, usage_id, handler, suffix=''):
+def preview_handler(request, usage_id, handler, suffix='', context={}):
     """
     Dispatch an AJAX action to an xblock
 
@@ -50,7 +50,6 @@ def preview_handler(request, usage_id, handler, suffix=''):
     location = unquote_slashes(usage_id)
 
     descriptor = modulestore().get_item(location)
-    context = {}
     instance = _load_preview_module(request, descriptor, context)
     # Let the module handle the AJAX
     req = django_to_webob_request(request)
