@@ -90,7 +90,7 @@ class GetItem(ItemTest):
         root_locator = resp_content['locator']
 
         # Get the root container fragment
-        resp = self.client.get('/xblock/' + root_locator, HTTP_ACCEPT='application/container-x-fragment+json')
+        resp = self.client.get('/xblock/' + root_locator + '/container_preview', HTTP_ACCEPT='application/json')
         self.assertEqual(resp.status_code, 200)
         resp_content = json.loads(resp.content)
         html = resp_content['html']
@@ -124,7 +124,7 @@ class GetItem(ItemTest):
         self.assertEqual(resp.status_code, 200)
 
         # Get the root container fragment
-        resp = self.client.get('/xblock/' + root_locator, HTTP_ACCEPT='application/container-x-fragment+json')
+        resp = self.client.get('/xblock/' + root_locator + '/container_preview', HTTP_ACCEPT='application/json')
         self.assertEqual(resp.status_code, 200)
         resp_content = json.loads(resp.content)
         html = resp_content['html']
@@ -625,11 +625,11 @@ class TestEditItem(ItemTest):
         self.assertNotEqual(draft.data, published.data)
 
         # Get problem by 'xblock_handler'
-        resp = self.client.get('/xblock/' + self.problem_locator + '/student_view', HTTP_ACCEPT='application/x-fragment+json')
+        resp = self.client.get('/xblock/' + self.problem_locator + '/student_view', HTTP_ACCEPT='application/json')
         self.assertEqual(resp.status_code, 200)
 
         # Activate the editing view
-        resp = self.client.get('/xblock/' + self.problem_locator + '/studio_view', HTTP_ACCEPT='application/x-fragment+json')
+        resp = self.client.get('/xblock/' + self.problem_locator + '/studio_view', HTTP_ACCEPT='application/json')
         self.assertEqual(resp.status_code, 200)
 
         # Both published and draft content should still be different

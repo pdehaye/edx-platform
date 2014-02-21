@@ -30,7 +30,8 @@ define(["jquery", "underscore", "js/views/baseview", "xblock/runtime.v1"],
              * @param element The wrapper element that contains the XBlock
              */
             initializeXBlock: function(element) {
-                XBlock.initializeBlock(element.find('.xblock-student_view'));
+                var rootXBlock = element.find('.xblock-student_view').first();
+                XBlock.initializeBlock(rootXBlock);
             },
 
             /**
