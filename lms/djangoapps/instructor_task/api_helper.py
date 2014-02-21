@@ -238,6 +238,8 @@ def check_arguments_for_rescoring(course_id, problem_url):
     descriptor doesn't exist.  NotImplementedError is raised if the
     corresponding module doesn't support rescoring calls.
     """
+    import ipdb; ipdb.set_trace()
+
     descriptor = modulestore().get_instance(course_id, problem_url)
     if not hasattr(descriptor, 'module_class') or not hasattr(descriptor.module_class, 'rescore_problem'):
         msg = "Specified module does not support rescoring."
@@ -290,6 +292,11 @@ def submit_task(request, task_type, task_class, course_id, task_input, task_key)
     # submit task:
     task_id = instructor_task.task_id
     task_args = [instructor_task.id, _get_xmodule_instance_args(request, task_id)]  # pylint: disable=E1101
+
     task_class.apply_async(task_args, task_id=task_id)
+    # At this point, a separate celery task has been created.
+    import ipdb; ipdb.set_trace()
+    # To debug the separate task, see:
+    #     http://docs.celeryproject.org/en/latest/tutorials/debugging.html
 
     return instructor_task

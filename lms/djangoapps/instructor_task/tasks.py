@@ -22,6 +22,9 @@ of the query for traversing StudentModule objects.
 from django.conf import settings
 from django.utils.translation import ugettext_noop
 from celery import task
+
+from celery.contrib import rdb
+
 from functools import partial
 from instructor_task.tasks_helper import (
     run_main_task,
@@ -54,6 +57,9 @@ def rescore_problem(entry_id, xmodule_instance_args):
     `xmodule_instance_args` provides information needed by _get_module_instance_for_task()
     to instantiate an xmodule instance.
     """
+
+    rdb.set_trace()  # <- set breakpoint
+
     # Translators: This is a past-tense verb that is inserted into task progress messages as {action}.
     action_name = ugettext_noop('rescored')
     update_fcn = partial(rescore_problem_module_state, xmodule_instance_args)

@@ -102,6 +102,8 @@ def submit_rescore_problem_for_all_students(request, course_id, problem_url):
     save here.  Any future database operations will take place in a
     separate transaction.
     """
+    import ipdb; ipdb.set_trace()
+
     # check arguments:  let exceptions return up to the caller.
     check_arguments_for_rescoring(course_id, problem_url)
 

@@ -264,6 +264,8 @@ def instructor_dashboard(request, course_id):
         problem_urlname = request.POST.get('problem_for_all_students', '')
         problem_url = get_module_url(problem_urlname)
         try:
+            import ipdb; ipdb.set_trace()
+
             instructor_task = submit_rescore_problem_for_all_students(request, course_id, problem_url)
             if instructor_task is None:
                 msg += '<font color="red">{text}</font>'.format(
