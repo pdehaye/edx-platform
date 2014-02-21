@@ -361,20 +361,23 @@ class VideoModule(VideoFields, XModule):
                 response.content_type = "application/x-subrip"
 
         elif dispatch == 'available_translations':
-            available_translations, langs = [], {}
-            if self.sub:
-                langs['en'] = self.sub
-            for lang, srt_filename in self.transcripts.items():
-                langs[lang] = os.path.splitext(srt_filename)[0]
-            for lang, subs_id in langs.items():
+            available_translations = ['en']
+            if self.sub:  # check if sjson exists for 'en'.
                 try:
-                    asset(self.location, subs_id, lang)
+                    asset(self.location, self.sub, 'en')
                 except NotFoundError:
-                    pass
-                else:
-                    available_translations.append(lang)
-            response = Response(json.dumps(available_translations))
-            response.content_type = 'application/json'
+                    available_translations.remove('en')
+            for lang in self.transcripts:
+                try:
+                   asset(self.location, None, None, self.transcripts[lang])
+                except NotFoundError:
+                    continue
+                available_translations.append(lang)
+            if available_translations:
+                response = Response(json.dumps(available_translations))
+                response.content_type = 'application/json'
+            else:
+                response = Response(status=404)
         else:  # unknown dispatch
             log.debug("Dispatch is not allowed")
             response = Response(status=404)

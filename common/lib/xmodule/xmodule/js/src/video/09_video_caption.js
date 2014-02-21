@@ -286,7 +286,6 @@ function () {
                     '[Video info]: STATUS:', textStatus +
                     ', MESSAGE:', '' + errorThrown
                 );
-
                 // If initial list of languages has more than 1 item, check
                 // for availability other transcripts.
                 if (_.keys(self.config.transcriptLanguages).length > 1) {
@@ -324,15 +323,6 @@ function () {
                 }
             },
             error: function (jqXHR, textStatus, errorThrown) {
-                console.log(
-                    '[Video info]: ERROR while fetching list of ' +
-                    'available translations.'
-                );
-                console.log(
-                    '[Video info]: STATUS:', textStatus +
-                    ', MESSAGE:', '' + errorThrown
-                );
-
                 Caption.hideCaptions(true, false);
                 Caption.hideSubtitlesEl.hide();
             }

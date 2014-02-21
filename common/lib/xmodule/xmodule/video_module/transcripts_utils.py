@@ -404,7 +404,7 @@ def asset_location(location, filename):
     )
 
 
-def asset(location, subs_id, lang='en'):
+def asset(location, subs_id, lang='en', filename=None):
     """
     Get asset from contentstore, asset location is built from subs_id and lang.
 
@@ -413,7 +413,7 @@ def asset(location, subs_id, lang='en'):
     return contentstore().find(
         asset_location(
             location,
-            subs_filename(subs_id, lang)
+            subs_filename(subs_id, lang) if not filename else filename
         )
     )
 
